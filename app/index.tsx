@@ -1,84 +1,69 @@
-import { StyleSheet, View, Alert } from "react-native";
+import { StyleSheet, View, TextInput as TextInputRn } from "react-native";
 
 import { TextInput, Button, Text } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link } from "expo-router";
-import { router } from "expo-router";
+import { Link, expo-router } from "expo-router";
+import React from "react";
 
-const FormData = z
-  .object({
-    password: z
-      .string()
-      .min(5, { message: "Password must contain at least 5 characters" })
-      .max(16, { message: "Password contain at most 16 characters" }),
-    email: z.string().email(),
-  })
-  .superRefine((values, ctx) => {
-    if (!values.password && !values.email) {
-      ctx.addIssue({
-        message: "Either password or email should be filled in.",
-        code: z.ZodIssueCode.custom,
-        path: ["password"],
-      });
-      ctx.addIssue({
-        message: "Either password or email should be filled in.",
-        code: z.ZodIssueCode.custom,
-        path: ["email"],
-      });
-    }
-  });
-
-type FormData = z.infer<typeof FormData>;
+const form = z.object({
+  pass: z
+    .string()
+    .min(5, { message: "Password must contain at least 5 characters" })
+    .max(16, { message: "Password contain at most 16 characters" }),
+  email: z.string().email(),
+  fullName: z.string().min(1).max(50),
+});
+type FormData = z.infer<typeof form>;
 
 export default function Page() {
   const {
     control,
     handleSubmit,
-    trigger,
     formState: { errors },
   } = useForm({
     defaultValues: {
-      password: "",
+      pass: "",
       email: "",
+      fullName: "",
     },
-    resolver: zodResolver(FormData),
+    resolver: zodResolver(form),
   });
+
+  const refs = {
+    passRef: React.useRef<TextInputRn>(null),
+    fullNameRef: React.useRef<TextInputRn>(null),
+  } as const;
 
   const onSubmit = (data: FormData) => {
     console.log(data);
-    router.replace("/success");
-  };
-
-  const handleOnChangeText = (
-    value: string,
-    onChange: (...event: string[]) => void
-  ) => {
-    onChange(value);
-    trigger();
+    router.push("/success");
   };
 
   return (
     <View style={styles.container}>
       <Text style={[styles.title, styles.text]}>Welcome stranger</Text>
-
       <Controller
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            mode={"outlined"}
-            label={"Email"}
+            mode="outlined"
+            label="Email"
             style={styles.inputField}
             onBlur={onBlur}
-            onChangeText={(value: string) =>
-              handleOnChangeText(value, onChange)
-            }
+            onChangeText={onChange}
             value={value}
-            error={errors.email ? true : false}
-            keyboardType={"email-address"}
+            error={!errors.email}
+            keyboardType="email-address"
             autoCapitalize="none"
             autoComplete="email"
+            autoFocus
+            returnKeyType="next"
+            onSubmitEditing={() => {
+              refs.passRef.current?.focus();
+            }}
+            blurOnSubmit={false}
           />
         )}
         name="email"
@@ -91,24 +76,47 @@ export default function Page() {
         control={control}
         render={({ field: { onChange, onBlur, value } }) => (
           <TextInput
-            mode={"outlined"}
-            label={"Password"}
+            ref={refs.passRef}
+            mode="outlined"
+            label="Password"
             secureTextEntry
             style={styles.inputField}
             onBlur={onBlur}
-            onChangeText={(value: string) =>
-              handleOnChangeText(value, onChange)
-            }
+            onChangeText={onChange}
             value={value}
-            error={errors.email ? true : false}
+            error={!errors.pass}
             autoCapitalize="none"
-            autoComplete="email"
+            autoComplete="password"
+            returnKeyType="next"
+            onSubmitEditing={() => {
+              refs.fullNameRef.current?.focus();
+            }}
+            blurOnSubmit={false}
           />
         )}
-        name="password"
+        name="pass"
       />
-      {errors.password ? (
-        <Text style={styles.error}>{errors.password.message}</Text>
+      {errors.pass && <Text style={styles.error}>{errors.pass.message}</Text>}
+
+      <Controller
+        control={control}
+        render={({ field: { onChange, onBlur, value } }) => (
+          <TextInput
+            ref={refs.fullNameRef}
+            mode="outlined"
+            label="Full Name"
+            style={styles.inputField}
+            onBlur={onBlur}
+            onChangeText={onChange}
+            value={value}
+            error={!errors.fullName}
+            autoCapitalize="words"
+          />
+        )}
+        name="fullName"
+      />
+      {errors.fullName ? (
+        <Text style={styles.error}>{errors.fullName.message}</Text>
       ) : null}
 
       <Button
