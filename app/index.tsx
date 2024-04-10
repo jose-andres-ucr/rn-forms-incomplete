@@ -4,7 +4,7 @@ import { TextInput, Button, Text } from "react-native-paper";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Link, expo-router } from "expo-router";
+import { Link, router } from "expo-router";
 import React from "react";
 
 const form = z.object({
